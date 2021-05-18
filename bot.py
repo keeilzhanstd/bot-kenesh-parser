@@ -23,7 +23,12 @@ async def show(message: types.Message):
             answer += f'{fraction}\n'
         await message.answer(answer)
     else:
-        if ("Парламентская фракция «" + args + "»") not in set(parlament.fractions):
+        if args == "СДПК":
+            frac = ("Парламентская фракция " + args)
+        else:
+            frac = ("Парламентская фракция «" + args + "»")
+
+        if (frac) not in set(parlament.fractions):
             await message.answer(f'Нету фракции с названием: {args}')
         else:
             answer = f'Депутаты относящиеся к фракции {args}: \n'
