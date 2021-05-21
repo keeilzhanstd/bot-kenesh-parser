@@ -1,4 +1,6 @@
 from typing_extensions import ParamSpec
+import aioschedule as schedule
+import time
 import config
 import logging
 import main
@@ -9,13 +11,13 @@ from aiogram import Bot, Dispatcher, executor, types
 
 logging.basicConfig(level=logging.INFO)
 
+
 bot = Bot(token=config.API_TOKEN)
 dp = Dispatcher(bot)
 
 
 @dp.message_handler(commands=['fractions'])
 async def show(message: types.Message):
-    parlament = main.Parlament(main.fetchDeputies())
     args = message.text[11:]
     if len(args) <= 0:
         answer = "Фракции: \n"
@@ -40,13 +42,12 @@ async def show(message: types.Message):
 
 @dp.message_handler(commands=['deputy'])
 async def show(message: types.Message):
-    parlament = main.Parlament(main.fetchDeputies())
     args = message.text[8:]
     if args not in set(parlament.names):
         await message.answer(f'Нету депутата с именем: {args}')
     else:
         answer = ""
-        for deputy in main.parlament.deputies:
+        for deputy in parlament.deputies:
             if deputy.name == args:
                 url = deputy.deputyLink
                 source = urllib.request.urlopen(url)
@@ -62,7 +63,6 @@ async def show(message: types.Message):
 
 @dp.message_handler(commands=['deputies'])
 async def show(message: types.Message):
-    parlament = main.Parlament(main.fetchDeputies())
     answer = "Депутаты: \n"
     for name in set(parlament.names):
         answer += f'{name}\n'
@@ -79,9 +79,18 @@ async def show(message: types.Message):
 Пример: /fractions Ата Мекен
 /deputy {ФИО} - для получения информации о депутате.
 Пример: /deputy Абдылдаев Шералы Итибаевич
+/update - Чтобы обновить базу данных о депутатах.
 '''
 
     await message.answer(help_text)
 
+
+@ dp.message_handler(commands=['update'])
+async def show(message: types.Message):
+    global parlament
+    parlament = main.Parlament(main.fetchDeputies())
+    await message.answer("База данных успешно обновлена.")
+
 if __name__ == '__main__':
+    parlament = main.Parlament(main.fetchDeputies())
     executor.start_polling(dp, skip_updates=True)
