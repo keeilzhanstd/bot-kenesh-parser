@@ -1,8 +1,31 @@
 import bs4 as bs
 import urllib.request
 import pandas as pd
-import sys
 import os
+
+
+class Writer:
+    def writeToExcel(self, parlament):
+        deputiesDataFrame = pd.DataFrame(
+            {'Идентификационный номер': parlament.ids,
+             'ФИО Депутата': parlament.names,
+             'Фракция': parlament.fractions,
+             'Ссылка на страницу депутата': parlament.deputyLinks,
+             'Ссылка на страницу фракции': parlament.fractionLinks})
+        writer = pd.ExcelWriter('deputies.xlsx', engine='xlsxwriter')
+        deputiesDataFrame.to_excel(writer, sheet_name='Депутаты', index=False)
+        writer.save()
+
+    def writeToCsv(self, parlament):
+        deputiesDataFrame = pd.DataFrame(
+            {'Идентификационный номер': parlament.ids,
+             'ФИО Депутата': parlament.names,
+             'Фракция': parlament.fractions,
+             'Ссылка на страницу депутата': parlament.deputyLinks,
+             'Ссылка на страницу фракции': parlament.fractionLinks})
+        csvFileContents = deputiesDataFrame.to_csv(index=False)
+        with open("deputies.csv", "w", encoding='utf-8') as f:
+            f.write(csvFileContents)
 
 
 class Parlament:
@@ -22,28 +45,6 @@ class Parlament:
             self.fractions.append(deputy.fraction)
             self.deputyLinks.append(deputy.deputyLink)
             self.fractionLinks.append(deputy.fractionLink)
-
-    def writeToExcel(self):
-        deputiesDataFrame = pd.DataFrame(
-            {'Идентификационный номер': self.ids,
-             'ФИО Депутата': self.names,
-             'Фракция': self.fractions,
-             'Ссылка на страницу депутата': self.deputyLinks,
-             'Ссылка на страницу фракции': self.fractionLinks})
-        writer = pd.ExcelWriter('deputies.xlsx', engine='xlsxwriter')
-        deputiesDataFrame.to_excel(writer, sheet_name='Депутаты', index=False)
-        writer.save()
-
-    def writeToCsv(self):
-        deputiesDataFrame = pd.DataFrame(
-            {'Идентификационный номер': self.ids,
-             'ФИО Депутата': self.names,
-             'Фракция': self.fractions,
-             'Ссылка на страницу депутата': self.deputyLinks,
-             'Ссылка на страницу фракции': self.fractionLinks})
-        csvFileContents = deputiesDataFrame.to_csv(index=False)
-        with open("deputies.csv", "w", encoding='utf-8') as f:
-            f.write(csvFileContents)
 
 
 class Deputy:
@@ -82,20 +83,19 @@ def fetchDeputies():
     return deputies
 
 
-parlament = Parlament(fetchDeputies())
-
-
 def main():
+    parlament = Parlament(fetchDeputies())
+    writer = Writer()
     while True:
         userChoice = int(input(
             "How do you wish to save file?\n 1. Excel \n 2. CSV \n\n 0. Exit \nChoose: 1/2/0 => "))
 
         if userChoice == 1:
-            parlament.writeToExcel()
+            writer.writeToExcel(parlament)
             print("Saved in deputies.xlsx under the current directory: " + os.getcwd())
             break
         elif userChoice == 2:
-            parlament.writeToCsv()
+            writer.writeToCsv(parlament)
             print("Saved in deputies.csv under the current directory: " + os.getcwd())
             break
         elif userChoice == 0:
